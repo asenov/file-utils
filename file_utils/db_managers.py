@@ -1,5 +1,11 @@
+import logging
 import os
 import sqlite3
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s]: %(message)s"
+)
+_logger = logging.getLogger(__file__)
 
 
 class SQLiteDBManager:
@@ -9,12 +15,10 @@ class SQLiteDBManager:
         self._cursor = self._conn.cursor()
         self._db_path = db_path
 
-    def _setup_db(self):
+    def _setup_db(self) -> None:
         if self._initialize_db:
             base_dir = os.path.abspath(os.path.dirname(__file__))
-            with open(
-                os.path.join(base_dir, "schema/db_schema.sql"), "r"
-            ) as fp_schema:
+            with open(os.path.join(base_dir, "schema/db_schema.sql"), "r") as fp_schema:
                 self._conn.executescript(fp_schema.read())
             self._conn.commit()
 
@@ -28,7 +32,7 @@ class SQLiteDBManager:
 
     def insert_row(self, table, args):
         stm_values = ("?," * len(args))[:-1]
-        q = f"insert into {table} ({', '.join(args)}) VALUES({stm_values})"
+        q = f"INSERT INTO {table} ({', '.join(args)}) VALUES({stm_values})"
 
         try:
             self._cursor.execute(q, tuple(args.values()))
@@ -36,10 +40,9 @@ class SQLiteDBManager:
 
             return self._cursor.lastrowid
         except sqlite3.IntegrityError:
-            print("File already exists in the db")
+            _logger.error("File already exists in database")
 
     def query(self, q: str, params: tuple = ()):
-
         testing_q = q.lower()
         for term in ("drop", "delete", "update"):
             if term in testing_q:
