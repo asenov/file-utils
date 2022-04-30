@@ -1,4 +1,7 @@
 # file-utils
+
+[![codecov](https://codecov.io/gh/asenov/file-utils/branch/main/graph/badge.svg?token=1282DYVVXA)](https://codecov.io/gh/asenov/file-utils)
+
 Useful file and storage command line utils
 
 ## 🔥 Features
