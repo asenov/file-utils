@@ -4,7 +4,8 @@ from tabulate import tabulate
 
 
 class PrintFiles:
-    def get_all(self, data):
+    @staticmethod
+    def get_all(data):
         print(
             tabulate(
                 data, headers=["Id", "original file path", "file name", "created on"]
@@ -13,7 +14,8 @@ class PrintFiles:
 
 
 class PrintJson:
-    def get_all(self, data):
+    @staticmethod
+    def get_all(data):
         print(
             json.dumps(
                 [
