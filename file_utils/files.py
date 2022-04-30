@@ -1,6 +1,8 @@
+import glob
 import logging
 import os
 from datetime import datetime
+
 from .db_managers import SQLiteDBManager
 
 _CHUNK_SIZE = 10485760
@@ -12,33 +14,59 @@ _logger = logging.getLogger(__file__)
 
 
 def read_file_chunks(file_path: str):
+    """Reads a file by chunks of `_CHUNK_SIZE`
+
+    Yields a part of a file if the file size is larger than the size of a single chunk
+    """
     chunk = True
-    with open(file_path, "rb") as fp_txt:
+    with open(file_path, "rb") as fp_reader:
         while chunk:
-            chunk = fp_txt.read(_CHUNK_SIZE)
+            chunk = fp_reader.read(_CHUNK_SIZE)
             yield chunk
 
 
-def store_file(db_name, file_path):
-    file_name = os.path.basename(file_path)
-    dir_path = os.path.dirname(file_path)
+def get_filepath(path: str):
+    """Provides the path to file(s) from `path`.
+
+    Yields only file paths from `path`
+        if `path` is a single file will be yeilded `path`
+        if `path` is a directory will be yielded recursively only file paths stored in to `path`
+    """
+    _logger.info(f"Checking {path}")
+    if os.path.isfile(path):
+        yield path
+    if os.path.isdir(path):
+        for item in glob.iglob(f"{path}/*", recursive=True):
+            if os.path.isdir(item):
+                continue
+            yield item
+
+
+def store_files(db_name, local_paths: list):
     with SQLiteDBManager(db_name) as db:
-        file_id = db.insert_row(
-            "files",
-            {
-                "file_name": file_name,
-                "original_file_location": dir_path,
-                "created_on": datetime.now(),
-            },
-        )
-        if not file_id:
-            return
-        for index, chunk in enumerate(read_file_chunks(file_path), start=1):
-            if chunk:
-                db.insert_row(
-                    "file_chunks",
-                    {"chunk_id": index, "chunk": chunk, "file_id": file_id},
+        for path in local_paths:
+            for item in get_filepath(path):
+                file_name = os.path.basename(item)
+                dir_path = os.path.dirname(item)
+                _logger.info(f"Adding {item}")
+                file_id = db.insert_row(
+                    "files",
+                    {
+                        "file_name": file_name,
+                        "original_file_location": dir_path,
+                        "created_on": datetime.now(),
+                    },
                 )
+                if not file_id:
+                    continue
+                for index, chunk in enumerate(
+                    read_file_chunks(os.path.abspath(item)), start=1
+                ):
+                    if chunk:
+                        db.insert_row(
+                            "file_chunks",
+                            {"chunk_id": index, "chunk": chunk, "file_id": file_id},
+                        )
 
 
 def restore_file_by_id(db_name, file_id, dest_location):
@@ -55,9 +83,9 @@ def restore_file_by_id(db_name, file_id, dest_location):
         except IndexError:
             raise RuntimeError("File id does not exists")
         destination = f"{dest_location}/{file_name}"
-        with open(destination, "wb") as fp_w:
+        with open(destination, "wb") as fp_writer:
             for chunk in db.query(chunks_query, (file_id,)):
-                fp_w.write(chunk[0])
+                fp_writer.write(chunk[0])
         _logger.info(f"File has been restored {destination}")
 
 
