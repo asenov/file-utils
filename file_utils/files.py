@@ -1,3 +1,6 @@
+"""
+files management utils
+"""
 import glob
 import logging
 import os
@@ -37,9 +40,8 @@ def get_filepath(path: str):
         yield path
     if os.path.isdir(path):
         for item in glob.iglob(f"{path}/*", recursive=True):
-            if os.path.isdir(item):
-                continue
-            yield item
+            if os.path.isfile(item):
+                yield item
 
 
 def store_files(db_name, local_paths: list):
