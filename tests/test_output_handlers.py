@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from file_utils import AsTable, AsJSON
+from file_utils import AsJSON, AsTable
 
 
 class TestOutputHandlers(TestCase):

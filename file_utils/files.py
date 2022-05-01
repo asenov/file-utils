@@ -72,7 +72,7 @@ def store_files(db_name, local_paths: list):
 
 def restore_file_by_id(db_name, file_id, dest_location):
     if not os.path.isfile(db_name):
-        raise RuntimeError(f"DB file {db_name} does not exists")
+        raise OSError(f"DB file {db_name} does not exists")
     find_query = "select id, file_name from files where id = ? limit 1"
     chunks_query = (
         "select chunk from file_chunks where file_id = ? order by chunk_id ASC"
@@ -92,7 +92,7 @@ def restore_file_by_id(db_name, file_id, dest_location):
 
 def list_files(db_name, callback):
     if not os.path.isfile(db_name):
-        raise RuntimeError("DB file does not exists")
+        raise OSError(f"DB file {db_name} does not exists")
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
             getattr(callback, "get_all")(
@@ -101,6 +101,8 @@ def list_files(db_name, callback):
 
 
 def find_files(db_name, file_name, callback):
+    if not os.path.isfile(db_name):
+        raise OSError(f"DB file {db_name} does not exists")
     find_query = "select * from files where file_name LIKE ? "
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
