@@ -12,7 +12,7 @@ from file_utils.files import (
     list_files,
     read_file_chunks,
     restore_file_by_id,
-    store_files
+    store_files,
 )
 
 
@@ -145,22 +145,24 @@ class TestFileOperations(unittest.TestCase):
     def test_list_files(self):
         result_handler = mock.Mock()
         with self.assertRaisesRegex(OSError, "DB file none does not exists"):
-            _ = list_files('none', result_handler)
+            _ = list_files("none", result_handler)
         _ = list_files(self.db_path, result_handler)
         result_handler.get_all.assert_called_once()
 
     def test_find_files(self):
         result_handler = mock.Mock()
         with self.assertRaisesRegex(OSError, "DB file none does not exists"):
-            _ = find_files('none', "one", result_handler)
+            _ = find_files("none", "one", result_handler)
         _ = find_files(self.db_path, "one", result_handler)
         result_handler.get_all.assert_called_once()
 
     def test_delete_file(self):
         with self.assertRaisesRegex(OSError, "DB file none does not exists"):
-            _ = delete_file_by_id('none', 10)
+            _ = delete_file_by_id("none", 10)
 
         with self.assertRaisesRegex(RuntimeError, "Record 10 does not exist"):
             _ = delete_file_by_id(self.db_path, 10)
         _ = delete_file_by_id(self.db_path, 1)
-        self.assertIsNone(self.cur.execute('select id from files where id = 1').fetchone())
+        self.assertIsNone(
+            self.cur.execute("select id from files where id = 1").fetchone()
+        )

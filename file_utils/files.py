@@ -90,23 +90,25 @@ def restore_file_by_id(db_name, file_id, dest_location):
         _logger.info("File has been restored %s", destination)
 
 
-def list_files(db_name, callback):
+def list_files(db_name, callback):  # pylint: disable=R1710
     if not os.path.isfile(db_name):
         raise OSError(f"DB file {db_name} does not exists")
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
-            getattr(callback, "get_all")(
-                db_conn.query("select * from files order by file_name ASC")
+            return getattr(callback, "get_all")(
+                db_conn.query("select * from v_files order by file_name ASC")
             )
 
 
-def find_files(db_name, file_name, callback):
+def find_files(db_name, file_name, callback):  # pylint: disable=R1710
     if not os.path.isfile(db_name):
         raise OSError(f"DB file {db_name} does not exists")
-    find_query = "select * from files where file_name LIKE ? "
+    find_query = "select * from v_files where file_name LIKE ? "
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
-            getattr(callback, "get_all")(db_conn.query(find_query, (f"{file_name}%",)))
+            return getattr(callback, "get_all")(
+                db_conn.query(find_query, (f"{file_name}%",))
+            )
 
 
 def delete_file_by_id(db_name, file_id: int):
