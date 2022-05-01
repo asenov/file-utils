@@ -27,9 +27,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest coverage pylint
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    #- name: Lint with pylint (Disabled for now)
-    #  run: |
-    #    pylint file_utils
+    - name: Lint with pylint
+      run: |
+        pylint file_utils
     - name: Test with pytest
       run: |
         pytest

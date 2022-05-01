@@ -1,3 +1,6 @@
+"""
+Database management operations
+"""
 import logging
 import os
 import sqlite3
@@ -19,7 +22,9 @@ class SQLiteDBManager:
         """Creates a new sqlite database if db file path is not a file"""
         if self._initialize_db:
             base_dir = os.path.abspath(os.path.dirname(__file__))
-            with open(os.path.join(base_dir, "schema/db_schema.sql"), "r") as fp_schema:
+            with open(
+                os.path.join(base_dir, "schema/db_schema.sql"), "r", encoding="utf-8"
+            ) as fp_schema:
                 self._conn.executescript(fp_schema.read())
             self._conn.commit()
 
@@ -51,6 +56,7 @@ class SQLiteDBManager:
             return self._cursor.lastrowid
         except sqlite3.IntegrityError:
             _logger.error("File already exists in database")
+        return None
 
     def query(self, query: str, params: tuple = ()):
         """

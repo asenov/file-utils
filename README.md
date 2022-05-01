@@ -12,10 +12,13 @@ Useful file and storage command line utils
 Operations
 - [x] Add file(s) or directory
 - [x] List files
+
 Search files
     - [x] by record id
+
 Restore file(s)
     - [x] by record id
+
 - [ ] Delete files
 
 

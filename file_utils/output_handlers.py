@@ -3,7 +3,7 @@ import json
 from tabulate import tabulate
 
 
-class AsTable:
+class AsTable:  # pylint: disable=too-few-public-methods
     @staticmethod
     def get_all(data):
         return tabulate(
@@ -11,9 +11,9 @@ class AsTable:
         )
 
 
-class AsJSON:
+class AsJSON:  # pylint: disable=too-few-public-methods
     @staticmethod
-    def get_all(data):
+    def get_all(data):  # pylint: disable=R0903
         return json.dumps(
             [
                 {"id": row[0], "file_path": f"{row[1]}/{row[2]}", "created": row[3]}
