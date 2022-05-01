@@ -107,3 +107,21 @@ def find_files(db_name, file_name, callback):
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
             getattr(callback, "get_all")(db_conn.query(find_query, (f"{file_name}%",)))
+
+
+def delete_file_by_id(db_name, file_id: int):
+    """Removes file record from sqlite database
+
+    Args:
+        db_name (str): Path to sqldatabse
+        file_id (int): File record id
+    """
+    if not os.path.isfile(db_name):
+        raise OSError(f"DB file {db_name} does not exists")
+    with SQLiteDBManager(db_name) as db_conn:
+        try:
+            _ = next(db_conn.query("select id from files where id = ? ", (file_id,)))
+        except StopIteration as err:
+            raise RuntimeError(f"Record {file_id} does not exist") from err
+        db_conn.delete_file_record(file_id)
+        _logger.info("File %s has been deleted", file_id)

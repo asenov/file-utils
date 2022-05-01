@@ -14,7 +14,7 @@ Operations
 - [x] List files
 - [x] Search file by record id
 - [x] Restore file by record id
-- [ ] Delete files
+- [x] Delete file by record id
 
 
 Output options

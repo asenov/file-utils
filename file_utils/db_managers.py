@@ -83,3 +83,13 @@ class SQLiteDBManager:
 
         for item in self._cursor.fetchall():
             yield item
+
+    def delete_file_record(self, record_id: int):
+        """Deletes records from the database by id. Affected tables files and file_chunks"""
+        record_id = int(record_id)
+
+        self._cursor.execute("DELETE FROM files WHERE id = ?", (record_id,))
+        self._cursor.execute("DELETE FROM file_chunks WHERE file_id = ?", (record_id,))
+        self._conn.commit()
+
+        return True
