@@ -72,7 +72,7 @@ def store_files(db_name, local_paths: list):
 
 def restore_file_by_id(db_name, file_id, dest_location):
     if not os.path.isfile(db_name):
-        raise OSError(f"DB file {db_name} does not exists")
+        raise FileNotFoundError(f"DB file {db_name} does not exists")
     find_query = "select id, file_name from files where id = ? limit 1"
     chunks_query = (
         "select chunk from file_chunks where file_id = ? order by chunk_id ASC"
@@ -92,7 +92,7 @@ def restore_file_by_id(db_name, file_id, dest_location):
 
 def list_files(db_name, callback):  # pylint: disable=R1710
     if not os.path.isfile(db_name):
-        raise OSError(f"DB file {db_name} does not exists")
+        raise FileNotFoundError(f"DB file {db_name} does not exists")
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
             return getattr(callback, "get_all")(
@@ -102,7 +102,7 @@ def list_files(db_name, callback):  # pylint: disable=R1710
 
 def find_files(db_name, file_name, callback):  # pylint: disable=R1710
     if not os.path.isfile(db_name):
-        raise OSError(f"DB file {db_name} does not exists")
+        raise FileNotFoundError(f"DB file {db_name} does not exists")
     find_query = "select * from v_files where file_name LIKE ? "
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
@@ -117,13 +117,21 @@ def delete_file_by_id(db_name, file_id: int):
     Args:
         db_name (str): Path to sqldatabse
         file_id (int): File record id
+
+    Raises:
+        FileNotFoundError: When db files does not exists
+        RuntimeError: When record id does not exists
     """
     if not os.path.isfile(db_name):
-        raise OSError(f"DB file {db_name} does not exists")
+        err_msg = f"DB file {db_name} does not exists"
+        _logger.error(err_msg)
+        raise FileNotFoundError(err_msg)
     with SQLiteDBManager(db_name) as db_conn:
         try:
             _ = next(db_conn.query("select id from files where id = ? ", (file_id,)))
         except StopIteration as err:
-            raise RuntimeError(f"Record {file_id} does not exist") from err
+            err_msg = f"Record {file_id} does not exist"
+            _logger.error(err_msg)
+            raise RuntimeError(err_msg) from err
         db_conn.delete_file_record(file_id)
         _logger.info("File %s has been deleted", file_id)
