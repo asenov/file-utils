@@ -15,6 +15,7 @@ class SQLiteDBManager:
     def __init__(self, db_path: str) -> None:
         self._initialize_db = not os.path.isfile(db_path)
         self._conn = sqlite3.connect(db_path)
+        self._conn.execute("PRAGMA foreign_keys = ON")
         self._cursor = self._conn.cursor()
         self._db_path = db_path
 
@@ -52,10 +53,9 @@ class SQLiteDBManager:
         try:
             self._cursor.execute(query, tuple(args.values()))
             self._conn.commit()
-
             return self._cursor.lastrowid
-        except sqlite3.IntegrityError:
-            _logger.error("File already exists in database")
+        except sqlite3.IntegrityError as err:
+            _logger.error("File already exists in database %s", err)
         return None
 
     def query(self, query: str, params: tuple = ()):
@@ -85,11 +85,14 @@ class SQLiteDBManager:
             yield item
 
     def delete_file_record(self, record_id: int):
-        """Deletes records from the database by id. Affected tables files and file_chunks"""
+        """Deletes file records from the database by id
+
+        Args:
+            record_id (int): File id to be deleted
+        """
         record_id = int(record_id)
 
         self._cursor.execute("DELETE FROM files WHERE id = ?", (record_id,))
-        self._cursor.execute("DELETE FROM file_chunks WHERE file_id = ?", (record_id,))
         self._conn.commit()
 
         return True

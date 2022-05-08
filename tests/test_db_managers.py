@@ -60,4 +60,33 @@ class TestSQLiteManagers(TestCase):
                 ValueError, "Query does not contain select statement"
             ):
                 _ = next(db_conn.query(query, params))
-            # print(next(db_conn.query(query, params)))
+
+    def test_delete_file_record(self):
+        with SQLiteDBManager(f"{self.directory}/data1.db") as db_conn:
+            table = "files"
+            data = {
+                "file_name": "new-file.txt",
+                "original_file_location": "path1",
+                "created_on": datetime.now(),
+            }
+            record_id = db_conn.insert_row(table, data)
+            self.assertEqual(record_id, 1)
+
+            chunks_table = "file_chunks"
+            data_chunk = {"file_id": record_id, "chunk_id": 1, "chunk": "first chunk"}
+
+            db_conn.insert_row(chunks_table, data_chunk)
+
+            query = "select file_id from file_chunks where file_id=?"
+            params = (record_id,)
+
+            ret = next(db_conn.query(query, params))
+            self.assertEqual(len(ret), 1)
+
+            db_conn.delete_file_record(record_id)
+
+            query = "select file_id from file_chunks where file_id=?"
+            params = (record_id,)
+
+            with self.assertRaises(StopIteration):
+                _ = next(db_conn.query(query, params))

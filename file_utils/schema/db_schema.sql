@@ -7,14 +7,18 @@ CREATE TABLE files (
 CREATE TABLE file_chunks (
     file_id INTEGER NOT NULL,
     chunk_id INTEGER NOT NULL,
-    chunk BLOB
+    chunk BLOB,
+    FOREIGN KEY (file_id) REFERENCES files(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE INDEX idx_file_name ON files (file_name);
 CREATE UNIQUE INDEX idx_file ON files (original_file_location, file_name);
 CREATE INDEX idx_file_chunks ON file_chunks(file_id);
 CREATE INDEX idx_file_chunk_id ON file_chunks(chunk_id);
 CREATE VIEW v_files AS
-SELECT f.*,
+SELECT f.id,
+    f.original_file_location,
+    f.file_name,
+    f.created_on,
     f_size_mb AS fsize_mb
 FROM files as f
     JOIN (
