@@ -156,6 +156,24 @@ class TestFileOperations(unittest.TestCase):
         _ = find_files(self.db_path, "one", result_handler)
         result_handler.get_all.assert_called_once()
 
+    def test_find_files_wildcard(self):
+        result_handler = mock.Mock()
+        with self.assertRaisesRegex(FileNotFoundError, "DB file none does not exists"):
+            _ = find_files("none", "*n*", result_handler)
+
+        class TestingHandler:
+            @staticmethod
+            def get_all(data):
+                return list(data)
+
+        ret = find_files(self.db_path, "*n*", TestingHandler)
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(len(ret[0]), 5)
+        self.assertEqual(ret[0][2], "one.txt")
+
+        ret = find_files(self.db_path, "n*", TestingHandler)
+        self.assertEqual(len(ret), 0)
+
     def test_delete_file(self):
         with self.assertRaisesRegex(FileNotFoundError, "DB file none does not exists"):
             _ = delete_file_by_id("none", 10)

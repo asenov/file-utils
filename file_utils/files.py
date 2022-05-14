@@ -38,7 +38,7 @@ def get_filepath(path: str):
     if os.path.isfile(path):
         yield path
     if os.path.isdir(path):
-        for item in glob.iglob(f"{path}/*", recursive=True):
+        for item in glob.iglob(f"{path}/**", recursive=True):
             if os.path.isfile(item):
                 yield item
 
@@ -104,11 +104,10 @@ def find_files(db_name, file_name, callback):  # pylint: disable=R1710
     if not os.path.isfile(db_name):
         raise FileNotFoundError(f"DB file {db_name} does not exists")
     find_query = "select * from v_files where file_name LIKE ? "
+    params = (file_name.replace("*", "%") if "*" in file_name else f"{file_name}%",)
     with SQLiteDBManager(db_name) as db_conn:
         if hasattr(callback, "get_all"):
-            return getattr(callback, "get_all")(
-                db_conn.query(find_query, (f"{file_name}%",))
-            )
+            return getattr(callback, "get_all")(db_conn.query(find_query, params))
 
 
 def delete_file_by_id(db_name, file_id: int):

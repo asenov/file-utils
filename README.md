@@ -12,7 +12,7 @@ Useful file and storage command line utils
 Operations
 - [x] Add file(s) or directory
 - [x] List files
-- [x] Search for files using the wildcard for the file name
+- [x] Search for files using wildcard for the file name
 - [x] Restore file by record id
 - [x] Delete file by record id
 
