@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from file_utils import AsJSON, AsTable
+from file_utils import AsJSON, AsTable, Generic
 
 
 class TestOutputHandlers(TestCase):
@@ -24,3 +24,7 @@ class TestOutputHandlers(TestCase):
         self.assertIn("file name", ret)
         self.assertIn("file_size", ret)
         self.assertIn("created", ret)
+
+    def test_generic(self):
+        ret = Generic.get_all(self.data)
+        self.assertEqual('', ret)

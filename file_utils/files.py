@@ -1,7 +1,6 @@
 """
 files management utils
 """
-import glob
 import logging
 import os
 from datetime import datetime
@@ -36,20 +35,21 @@ def get_filepath(path: str):
         if `path` is a directory will be yielded recursively only file paths stored in to `path`
     """
     if os.path.isfile(path):
-        yield path
+        yield os.path.dirname(path), os.path.basename(path)
     if os.path.isdir(path):
-        for item in glob.iglob(f"{path}/**", recursive=True):
-            if os.path.isfile(item):
-                yield item
+        for root, _, files in os.walk(path, topdown=True):
+            for fname in files:
+                # handle broken links
+                if not os.path.isfile(os.path.join(root, fname)):
+                    continue
+                yield root, fname
 
 
 def store_files(db_name, local_paths: list):
     with SQLiteDBManager(db_name) as db_conn:
         for path in local_paths:
-            for item in get_filepath(path):
-                file_name = os.path.basename(item)
-                dir_path = os.path.dirname(item)
-                _logger.info("Adding %s", item)
+            for dir_path, file_name in get_filepath(path):
+                _logger.info("Adding %s %s", dir_path, file_name)
                 file_id = db_conn.insert_row(
                     "files",
                     {
@@ -61,7 +61,7 @@ def store_files(db_name, local_paths: list):
                 if not file_id:
                     continue
                 for index, chunk in enumerate(
-                    read_file_chunks(os.path.abspath(item)), start=1
+                    read_file_chunks(os.path.join(dir_path, file_name)), start=1
                 ):
                     if chunk:
                         db_conn.insert_row(

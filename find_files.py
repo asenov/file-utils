@@ -2,11 +2,11 @@
 import argparse
 import sys
 
-from file_utils import AsTable, AsJSON, find_files
+from file_utils import AsTable, AsJSON, Generic, find_files
 
 
 def main(params):
-    output_type = {"json": AsJSON, "print": AsTable}
+    output_type = {"json": AsJSON, "print": AsTable, "generic": Generic}
 
     return find_files(params.db, params.file_name, output_type[params.output]())
 
@@ -22,7 +22,11 @@ if __name__ == "__main__":
         help="Full file name or file prefix. Insensitive to capital letters",
     )
     parser.add_argument(
-        "-o", "--output", default="print", choices=["json", "print"], help="Output mode"
+        "-o",
+        "--output",
+        default="print",
+        choices=["json", "print", "generic"],
+        help="Output mode",
     )
     args = parser.parse_args()
 

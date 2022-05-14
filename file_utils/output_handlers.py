@@ -2,8 +2,10 @@ import json
 
 from tabulate import tabulate
 
+# pylint: disable=too-few-public-methods
 
-class AsTable:  # pylint: disable=too-few-public-methods
+
+class AsTable:
     @staticmethod
     def get_all(data):
         return tabulate(
@@ -18,7 +20,7 @@ class AsTable:  # pylint: disable=too-few-public-methods
         )
 
 
-class AsJSON:  # pylint: disable=too-few-public-methods
+class AsJSON:
     @staticmethod
     def get_all(data):  # pylint: disable=R0903
         return json.dumps(
@@ -32,3 +34,11 @@ class AsJSON:  # pylint: disable=too-few-public-methods
                 for row in data
             ]
         )
+
+
+class Generic:
+    @staticmethod
+    def get_all(data):
+        for row in data:
+            print(f"{row[0]} {row[4]} {row[3]} {row[1]}/{row[2]}")
+        return ""

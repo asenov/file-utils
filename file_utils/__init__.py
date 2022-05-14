@@ -5,4 +5,4 @@ from .files import (
     restore_file_by_id,
     store_files,
 )
-from .output_handlers import AsJSON, AsTable
+from .output_handlers import AsJSON, AsTable, Generic

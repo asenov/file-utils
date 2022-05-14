@@ -25,15 +25,14 @@ class TestGetFilePath(unittest.TestCase):
     def test_file_path(self):
         with tempfile.NamedTemporaryFile() as tmpfile:
             ret = next(get_filepath(tmpfile.name))
-            self.assertEqual(ret, tmpfile.name)
+            self.assertEqual(os.path.join(ret[0], ret[1]), tmpfile.name)
 
     def test_dir_content(self):
         with tempfile.TemporaryDirectory(prefix="file_utils") as t_dir:
-            create_file(f"{t_dir}/one.txt")
-            with tempfile.TemporaryDirectory() as subt_dir:
-                for item in get_filepath(f"{t_dir}"):
-                    self.assertTrue(item, f"{t_dir}/one.txt")
-                    self.assertNotIn(item, subt_dir)
+            target_file = f"{t_dir}/one.txt"
+            create_file(target_file)
+            for item in get_filepath(f"{t_dir}"):
+                self.assertEqual(os.path.join(item[0], item[1]), target_file)
 
     def test_empty_dir(self):
         with tempfile.TemporaryDirectory(prefix="file_utils") as t_dir:
