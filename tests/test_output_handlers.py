@@ -27,4 +27,4 @@ class TestOutputHandlers(TestCase):
 
     def test_generic(self):
         ret = Generic.get_all(self.data)
-        self.assertEqual('', ret)
+        self.assertEqual("", ret)

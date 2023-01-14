@@ -17,8 +17,8 @@ from file_utils.files import (
 
 
 def create_file(path, contents="empty"):
-    with open(f"{path}", "w") as w:
-        w.write(contents)
+    with open(f"{path}", "w", encoding="utf-8") as file_w:
+        file_w.write(contents)
 
 
 class TestGetFilePath(unittest.TestCase):
@@ -69,13 +69,12 @@ class TestFileOperations(unittest.TestCase):
         self.files = [
             f"{self.files_folder}/one.txt",
             f"{self.files_folder}/two.txt",
-            f"{self.files_folder}/one.txt",
         ]
         create_file(self.files[0], "one")
         create_file(self.files[1], "two")
 
         self.db_path = f"{self.db_folder}/database.db"
-        _ = store_files(self.db_path, self.files)
+        store_files(self.db_path, self.files)
 
         self.conn = sqlite3.connect(self.db_path)
         self.cur = self.conn.cursor()
@@ -122,23 +121,23 @@ class TestFileOperations(unittest.TestCase):
         restore_location = f"{self.tmp_dir}/restored_files"
         os.mkdir(restore_location)
         with self.assertRaisesRegex(FileNotFoundError, "DB file none does not exists"):
-            _ = restore_file_by_id("none", 1, restore_location)
+            restore_file_by_id("none", 1, restore_location)
         with self.assertRaisesRegex(RuntimeError, "File id does not exists"):
-            _ = restore_file_by_id(self.db_path, 10, restore_location)
+            restore_file_by_id(self.db_path, 10, restore_location)
 
-        _ = restore_file_by_id(self.db_path, 1, restore_location)
+        restore_file_by_id(self.db_path, 1, restore_location)
         files = [f"{restore_location}/one.txt", f"{restore_location}/two.txt"]
         self.assertTrue(os.path.isfile(files[0]))
         self.assertFalse(os.path.isfile(files[1]))
 
-        _ = restore_file_by_id(self.db_path, 2, restore_location)
+        restore_file_by_id(self.db_path, 2, restore_location)
         self.assertTrue(os.path.isfile(files[0]))
         self.assertTrue(os.path.isfile(files[1]))
 
-        with open(files[0], "r") as reader:
+        with open(files[0], "r", encoding="utf-8") as reader:
             self.assertTrue(reader.read(), b"one")
 
-        with open(files[1], "r") as reader:
+        with open(files[1], "r", encoding="utf-8") as reader:
             self.assertTrue(reader.read(), b"two")
 
     def test_list_files(self):
@@ -175,11 +174,50 @@ class TestFileOperations(unittest.TestCase):
 
     def test_delete_file(self):
         with self.assertRaisesRegex(FileNotFoundError, "DB file none does not exists"):
-            _ = delete_file_by_id("none", 10)
+            delete_file_by_id("none", 10)
 
         with self.assertRaisesRegex(RuntimeError, "Record 10 does not exist"):
-            _ = delete_file_by_id(self.db_path, 10)
-        _ = delete_file_by_id(self.db_path, 1)
+            delete_file_by_id(self.db_path, 10)
+        delete_file_by_id(self.db_path, 1)
         self.assertIsNone(
             self.cur.execute("select id from files where id = 1").fetchone()
         )
+
+
+class TestBrokenLink(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp_dir = tempfile.mkdtemp()
+
+        self.db_folder = f"{self.tmp_dir}/database"
+        self.files_folder = f"{self.tmp_dir}/files"
+        self.db_path = f"{self.db_folder}/database.db"
+
+        os.mkdir(self.db_folder)
+        os.mkdir(self.files_folder)
+
+        self.files = [f"{self.files_folder}/one.txt", f"{self.files_folder}/two.txt"]
+        self.linked_file = f"{self.files_folder}/link-to-1.txt"
+
+        for fname in self.files:
+            create_file(fname, f"Content: {fname}")
+
+        os.symlink(self.files[0], self.linked_file)
+        os.unlink(self.files[0])
+
+        store_files(self.db_path, [self.files_folder])
+
+        self.conn = sqlite3.connect(self.db_path)
+        self.cur = self.conn.cursor()
+
+    def test_no_broken_link(self):
+        ret = self.cur.execute(
+            "select id from files where original_file_location = ?",
+            (self.linked_file.rsplit(os.sep, 1)[1],),
+        ).fetchone()
+        self.assertIsNone(ret)
+
+        ret = self.cur.execute(
+            "select id from files where original_file_location = ?",
+            (self.files[0].rsplit(os.sep, 1)[1],),
+        ).fetchone()
+        self.assertIsNone(ret)

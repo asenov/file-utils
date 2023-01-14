@@ -58,8 +58,8 @@ def store_files(db_name, local_paths: list):
                         "created_on": datetime.now(),
                     },
                 )
-                if not file_id:
-                    continue
+                #if not file_id:
+                #    continue
                 for index, chunk in enumerate(
                     read_file_chunks(os.path.join(dir_path, file_name)), start=1
                 ):
